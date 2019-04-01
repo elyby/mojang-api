@@ -1,0 +1,5 @@
+<?php
+$finder = \PhpCsFixer\Finder::create()
+    ->in(__DIR__);
+return \Ely\CS\Config::create()
+    ->setFinder($finder);
