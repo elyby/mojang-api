@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - The constructor no longer has arguments.
 
+### Fixed
+- Change `static` to `self` in `\Ely\Mojang\Response\Properties\Factory` to allow its extending.
+
 ### Removed
 - `\Ely\Mojang\Api::create()` static method. Use constructor instead.
 
