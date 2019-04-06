@@ -1,6 +1,6 @@
 {
     "name": "ely/mojang-api",
-    "description": "",
+    "description": "Library for access to Mojang API.",
     "license": "MIT",
     "type": "library",
     "authors": [
