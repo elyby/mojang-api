@@ -9,6 +9,7 @@ use Ely\Mojang\Middleware\ResponseConverterMiddleware;
 use Ely\Mojang\Middleware\RetryMiddleware;
 use Ely\Mojang\Response\Properties\TexturesProperty;
 use GuzzleHttp\Client;
+use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
@@ -42,11 +43,8 @@ class ApiTest extends TestCase {
         $handlerStack->after('http_errors', ResponseConverterMiddleware::create(), 'mojang_responses');
         $handlerStack->push(RetryMiddleware::create(), 'retry');
         $client = new Client(['handler' => $handlerStack]);
-        $this->api = new Api($client);
-    }
-
-    public function testCreate() {
-        $this->assertInstanceOf(Api::class, Api::create());
+        $this->api = new Api();
+        $this->api->setClient($client);
     }
 
     public function testUsernameToUuid() {
@@ -338,6 +336,15 @@ class ApiTest extends TestCase {
         $this->mockHandler->append(new Response(200));
         $this->expectException(NoContentException::class);
         $this->api->hasJoinedServer('MockedUsername', 'ad72fe1efe364e6eb78c644a9fba1d30');
+    }
+
+    public function testGetClient() {
+        $child = new class extends Api {
+            public function getDefaultClient() {
+                return $this->getClient();
+            }
+        };
+        $this->assertInstanceOf(ClientInterface::class, $child->getDefaultClient());
     }
 
     private function createResponse(int $statusCode, array $response): ResponseInterface {

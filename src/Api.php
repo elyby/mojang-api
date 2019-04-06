@@ -20,27 +20,8 @@ class Api {
      */
     private $client;
 
-    public function __construct(ClientInterface $client) {
+    public function setClient(ClientInterface $client): void {
         $this->client = $client;
-    }
-
-    /**
-     * @param callable $handler HTTP handler function to use with the stack. If no
-     *                          handler is provided, the best handler for your
-     *                          system will be utilized.
-     *
-     * @return static
-     */
-    public static function create(callable $handler = null): self {
-        $stack = HandlerStack::create($handler);
-        // use after method because middleware executes in reverse order
-        $stack->after('http_errors', ResponseConverterMiddleware::create(), 'mojang_response_converter');
-        $stack->push(RetryMiddleware::create(), 'retry');
-
-        return new static(new GuzzleClient([
-            'handler' => $stack,
-            'timeout' => 10,
-        ]));
     }
 
     /**
@@ -255,7 +236,23 @@ class Api {
      * @return ClientInterface
      */
     protected function getClient(): ClientInterface {
+        if ($this->client === null) {
+            $this->client = $this->createDefaultClient();
+        }
+
         return $this->client;
+    }
+
+    private function createDefaultClient(): ClientInterface {
+        $stack = HandlerStack::create();
+        // use after method because middleware executes in reverse order
+        $stack->after('http_errors', ResponseConverterMiddleware::create(), 'mojang_response_converter');
+        $stack->push(RetryMiddleware::create(), 'retry');
+
+        return new GuzzleClient([
+            'handler' => $stack,
+            'timeout' => 10,
+        ]);
     }
 
     private function decode(string $response): array {

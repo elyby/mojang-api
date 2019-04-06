@@ -23,11 +23,11 @@ composer require ely/mojang-api
 
 ## Usage
 
-To get the configured `Api` object right away, just use the static `create()` method:
+To start using this library just create a new `Api` class instance and call the necessary endpoint:
 
 ```php
 <?php
-$api = \Ely\Mojang\Api::create();
+$api = new \Ely\Mojang\Api();
 $response = $api->usernameToUUID('erickskrauch');
 echo $response->getId();
 ```
