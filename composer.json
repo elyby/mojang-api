@@ -12,6 +12,7 @@
     "require": {
         "php": ">=7.1.0",
         "ext-json": "*",
+        "ext-mbstring": "*",
         "guzzlehttp/guzzle": "^6.0.0",
         "ramsey/uuid": "^3.0.0"
     },

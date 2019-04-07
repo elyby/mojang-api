@@ -9,6 +9,7 @@ use Ely\Mojang\Middleware\ResponseConverterMiddleware;
 use Ely\Mojang\Middleware\RetryMiddleware;
 use Ely\Mojang\Response\ApiStatus;
 use Ely\Mojang\Response\NameHistoryItem;
+use Ely\Mojang\Response\ProfileInfo;
 use Ely\Mojang\Response\Properties\TexturesProperty;
 use GuzzleHttp\Client;
 use GuzzleHttp\ClientInterface;
@@ -16,6 +17,7 @@ use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Response;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use function GuzzleHttp\Psr7\parse_query;
@@ -201,6 +203,43 @@ class ApiTest extends TestCase {
         );
         $this->assertFalse($textures->getSkin()->isSlim());
         $this->assertSame('http://textures.minecraft.net/texture/capePath', $textures->getCape()->getUrl());
+    }
+
+    public function testPlayernamesToUuids() {
+        $this->mockHandler->append($this->createResponse(200, [
+            [
+                'id' => '86f6e3695b764412a29820cac1d4d0d6',
+                'name' => 'MockUsername',
+                'legacy' => false,
+                'demo' => true,
+            ],
+        ]));
+
+        $result = $this->api->playernamesToUuids([null, '', 'mockusername', 'nonexists']);
+
+        /** @var \Psr\Http\Message\RequestInterface $request */
+        $request = $this->history[0]['request'];
+        $body = json_decode($request->getBody()->getContents(), true);
+        $this->assertSame(['mockusername', 'nonexists'], $body);
+
+        $this->assertCount(1, $result);
+        $this->assertContainsOnlyInstancesOf(ProfileInfo::class, $result);
+        $this->assertArrayHasKey('mockusername', $result);
+        $this->assertSame('86f6e3695b764412a29820cac1d4d0d6', $result['mockusername']->getId());
+        $this->assertSame('MockUsername', $result['mockusername']->getName());
+        $this->assertFalse($result['mockusername']->isLegacy());
+        $this->assertTrue($result['mockusername']->isDemo());
+    }
+
+    public function testPlayernamesToUuidsInvalidArgumentException() {
+        $names = [];
+        for ($i = 0; $i < 101; $i++) {
+            $names[] = base64_encode(random_bytes(4));
+        }
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('You cannot request more than 100 names per request');
+        $this->api->playernamesToUuids($names);
     }
 
     public function testUsernameToTextures() {

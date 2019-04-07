@@ -12,6 +12,7 @@ use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Uri;
+use InvalidArgumentException;
 use Ramsey\Uuid\Uuid;
 
 class Api {
@@ -130,6 +131,50 @@ class Api {
      */
     public function usernameToTextures(string $username): Response\ProfileResponse {
         return $this->uuidToTextures($this->usernameToUUID($username)->getId());
+    }
+
+    /**
+     * @param string[] $names list of users' names
+     *
+     * @return \Ely\Mojang\Response\ProfileInfo[] response array is indexed with the initial username case
+     *
+     * @throws \Ely\Mojang\Exception\MojangApiException
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     *
+     * @url https://wiki.vg/Mojang_API#Playernames_-.3E_UUIDs
+     */
+    public function playernamesToUuids(array $names): array {
+        foreach ($names as $i => $name) {
+            if (empty($name)) {
+                unset($names[$i]);
+            }
+        }
+
+        if (count($names) > 100) {
+            throw new InvalidArgumentException('You cannot request more than 100 names per request');
+        }
+
+        $response = $this->getClient()->request('POST', 'https://authserver.mojang.com/authenticate', [
+            'json' => array_values($names),
+        ]);
+        $body = $this->decode($response->getBody()->getContents());
+
+        $result = [];
+        foreach ($body as $record) {
+            $object = Response\ProfileInfo::createFromResponse($record);
+            $key = $object->getName();
+            foreach ($names as $i => $name) {
+                if (mb_strtolower($name) === mb_strtolower($object->getName())) {
+                    unset($names[$i]);
+                    $key = $name;
+                    break;
+                }
+            }
+
+            $result[$key] = $object;
+        }
+
+        return $result;
     }
 
     /**

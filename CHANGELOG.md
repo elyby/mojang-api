@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `\Ely\Mojang\Api::setClient()` method to override default HTTP client.
 - [API Status](https://wiki.vg/Mojang_API#API_Status) endpoint.
 - [UUID to Name history](https://wiki.vg/Mojang_API#UUID_-.3E_Name_history) endpoint.
+- [Playernames -> UUIDs](https://wiki.vg/Mojang_API#Playernames_-.3E_UUIDs) endpoint.
 
 ### Changed
 - The constructor no longer has arguments.
