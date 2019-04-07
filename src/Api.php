@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Ely\Mojang;
 
+use DateTime;
 use Ely\Mojang\Middleware\ResponseConverterMiddleware;
 use Ely\Mojang\Middleware\RetryMiddleware;
 use GuzzleHttp\Client as GuzzleClient;
@@ -68,6 +69,32 @@ class Api {
         $data = $this->decode($response->getBody()->getContents());
 
         return Response\ProfileInfo::createFromResponse($data);
+    }
+
+    /**
+     * @param string $uuid
+     *
+     * @return \Ely\Mojang\Response\NameHistoryItem[]
+     *
+     * @throws GuzzleException
+     *
+     * @url https://wiki.vg/Mojang_API#UUID_-.3E_Name_history
+     */
+    public function uuidToNameHistory(string $uuid): array {
+        $response = $this->getClient()->request('GET', "https://api.mojang.com/user/profiles/{$uuid}/names");
+        $data = $this->decode($response->getBody()->getContents());
+
+        $result = [];
+        foreach ($data as $record) {
+            $date = null;
+            if (isset($record['changedToAt'])) {
+                $date = new DateTime('@' . ($record['changedToAt'] / 1000));
+            }
+
+            $result[] = new Response\NameHistoryItem($record['name'], $date);
+        }
+
+        return $result;
     }
 
     /**

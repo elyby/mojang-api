@@ -8,6 +8,7 @@ use Ely\Mojang\Exception\NoContentException;
 use Ely\Mojang\Middleware\ResponseConverterMiddleware;
 use Ely\Mojang\Middleware\RetryMiddleware;
 use Ely\Mojang\Response\ApiStatus;
+use Ely\Mojang\Response\NameHistoryItem;
 use Ely\Mojang\Response\Properties\TexturesProperty;
 use GuzzleHttp\Client;
 use GuzzleHttp\ClientInterface;
@@ -99,6 +100,33 @@ class ApiTest extends TestCase {
         $this->assertSame('MockUsername', $result->getName());
         $this->assertFalse($result->isLegacy());
         $this->assertFalse($result->isDemo());
+    }
+
+    public function testUuidToNameHistory() {
+        $this->mockHandler->append($this->createResponse(200, [
+            [
+                'name' => 'Gold',
+            ],
+            [
+                'name' => 'Diamond',
+                'changedToAt' => 1414059749000,
+            ],
+        ]));
+
+        $result = $this->api->uuidToNameHistory('86f6e3695b764412a29820cac1d4d0d6');
+
+        /** @var \Psr\Http\Message\RequestInterface $request */
+        $request = $this->history[0]['request'];
+        $this->assertSame('https://api.mojang.com/user/profiles/86f6e3695b764412a29820cac1d4d0d6/names', (string)$request->getUri());
+
+        $this->assertCount(2, $result);
+        $this->assertContainsOnlyInstancesOf(NameHistoryItem::class, $result);
+
+        $this->assertSame('Gold', $result[0]->getName());
+        $this->assertNull($result[0]->getChangedToAt());
+
+        $this->assertSame('Diamond', $result[1]->getName());
+        $this->assertSame('2014-10-23T10:22:29+00:00', $result[1]->getChangedToAt()->format(DATE_ATOM));
     }
 
     public function testUsernameToUuidWithAtParam() {
