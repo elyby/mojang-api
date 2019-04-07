@@ -25,6 +25,26 @@ class Api {
     }
 
     /**
+     * @return \Ely\Mojang\Response\ApiStatus[]
+     *
+     * @throws GuzzleException
+     *
+     * @url https://wiki.vg/Mojang_API#API_Status
+     */
+    public function apiStatus(): array {
+        $response = $this->getClient()->request('GET', 'https://status.mojang.com/check');
+        $body = $this->decode($response->getBody()->getContents());
+
+        $result = [];
+        foreach ($body as $serviceDeclaration) {
+            $serviceName = array_keys($serviceDeclaration)[0];
+            $result[$serviceName] = new Response\ApiStatus($serviceName, $serviceDeclaration[$serviceName]);
+        }
+
+        return $result;
+    }
+
+    /**
      * @param string $username
      * @param int    $atTime
      *

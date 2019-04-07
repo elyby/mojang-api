@@ -7,6 +7,7 @@ use Ely\Mojang\Api;
 use Ely\Mojang\Exception\NoContentException;
 use Ely\Mojang\Middleware\ResponseConverterMiddleware;
 use Ely\Mojang\Middleware\RetryMiddleware;
+use Ely\Mojang\Response\ApiStatus;
 use Ely\Mojang\Response\Properties\TexturesProperty;
 use GuzzleHttp\Client;
 use GuzzleHttp\ClientInterface;
@@ -45,6 +46,40 @@ class ApiTest extends TestCase {
         $client = new Client(['handler' => $handlerStack]);
         $this->api = new Api();
         $this->api->setClient($client);
+    }
+
+    public function testApiStatus() {
+        $this->mockHandler->append($this->createResponse(200, [
+            [
+                'minecraft.net' => 'yellow',
+            ],
+            [
+                'session.minecraft.net' => 'green',
+            ],
+            [
+                'textures.minecraft.net' => 'red',
+            ],
+        ]));
+
+        $result = $this->api->apiStatus();
+
+        /** @var \Psr\Http\Message\RequestInterface $request */
+        $request = $this->history[0]['request'];
+        $this->assertSame('https://status.mojang.com/check', (string)$request->getUri());
+
+        $this->assertCount(3, $result);
+        $this->assertContainsOnlyInstancesOf(ApiStatus::class, $result);
+        $this->assertArrayHasKey('minecraft.net', $result);
+        $this->assertSame('minecraft.net', $result['minecraft.net']->getServiceName());
+        $this->assertSame('yellow', $result['minecraft.net']->getStatus());
+
+        $this->assertArrayHasKey('session.minecraft.net', $result);
+        $this->assertSame('session.minecraft.net', $result['session.minecraft.net']->getServiceName());
+        $this->assertSame('green', $result['session.minecraft.net']->getStatus());
+
+        $this->assertArrayHasKey('textures.minecraft.net', $result);
+        $this->assertSame('textures.minecraft.net', $result['textures.minecraft.net']->getServiceName());
+        $this->assertSame('red', $result['textures.minecraft.net']->getStatus());
     }
 
     public function testUsernameToUuid() {
