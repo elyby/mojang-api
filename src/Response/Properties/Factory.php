@@ -12,7 +12,7 @@ class Factory {
     public static function createFromProp(array $prop): Property {
         $name = $prop['name'];
         if (isset(self::$MAP[$name])) {
-            $className = static::$MAP[$name];
+            $className = self::$MAP[$name];
             return new $className($prop);
         }
 
