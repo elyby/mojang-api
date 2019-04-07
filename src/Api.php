@@ -178,6 +178,35 @@ class Api {
     }
 
     /**
+     * @param string $accessToken
+     * @param string $accountUuid
+     * @param \Psr\Http\Message\StreamInterface|resource|string $skinContents
+     * @param bool $isSlim
+     *
+     * @throws GuzzleException
+     *
+     * @url https://wiki.vg/Mojang_API#Upload_Skin
+     */
+    public function uploadSkin(string $accessToken, string $accountUuid, $skinContents, bool $isSlim): void {
+        $this->getClient()->request('PUT', "https://api.mojang.com/user/profile/{$accountUuid}/skin", [
+            'multipart' => [
+                [
+                    'name' => 'file',
+                    'contents' => $skinContents,
+                    'filename' => 'char.png',
+                ],
+                [
+                    'name' => 'model',
+                    'contents' => $isSlim ? 'slim' : '',
+                ],
+            ],
+            'headers' => [
+                'Authorization' => 'Bearer ' . $accessToken,
+            ],
+        ]);
+    }
+
+    /**
      * @param string $login
      * @param string $password
      * @param string $clientToken
@@ -245,35 +274,6 @@ class Api {
         }
 
         return false;
-    }
-
-    /**
-     * @param string $accessToken
-     * @param string $accountUuid
-     * @param \Psr\Http\Message\StreamInterface|resource|string $skinContents
-     * @param bool $isSlim
-     *
-     * @throws GuzzleException
-     *
-     * @url https://wiki.vg/Mojang_API#Upload_Skin
-     */
-    public function uploadSkin(string $accessToken, string $accountUuid, $skinContents, bool $isSlim): void {
-        $this->getClient()->request('PUT', "https://api.mojang.com/user/profile/{$accountUuid}/skin", [
-            'multipart' => [
-                [
-                    'name' => 'file',
-                    'contents' => $skinContents,
-                    'filename' => 'char.png',
-                ],
-                [
-                    'name' => 'model',
-                    'contents' => $isSlim ? 'slim' : '',
-                ],
-            ],
-            'headers' => [
-                'Authorization' => 'Bearer ' . $accessToken,
-            ],
-        ]);
     }
 
     /**

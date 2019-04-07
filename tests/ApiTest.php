@@ -231,17 +231,6 @@ class ApiTest extends TestCase {
         $this->assertTrue($result['mockusername']->isDemo());
     }
 
-    public function testPlayernamesToUuidsInvalidArgumentException() {
-        $names = [];
-        for ($i = 0; $i < 101; $i++) {
-            $names[] = base64_encode(random_bytes(4));
-        }
-
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('You cannot request more than 100 names per request');
-        $this->api->playernamesToUuids($names);
-    }
-
     public function testUsernameToTextures() {
         $this->mockHandler->append($this->createResponse(200, [
             'id' => '86f6e3695b764412a29820cac1d4d0d6',
@@ -260,6 +249,34 @@ class ApiTest extends TestCase {
         [0 => ['request' => $request1], 1 => ['request' => $request2]] = $this->history;
         $this->assertSame('https://api.mojang.com/users/profiles/minecraft/MockUsername', (string)$request1->getUri());
         $this->assertStringStartsWith('https://sessionserver.mojang.com/session/minecraft/profile/86f6e3695b764412a29820cac1d4d0d6', (string)$request2->getUri());
+    }
+
+    public function testUploadSkinNotSlim() {
+        $this->mockHandler->append(new Response(200));
+        $this->api->uploadSkin('mocked access token', '86f6e3695b764412a29820cac1d4d0d6', 'skin contents', false);
+        /** @var \Psr\Http\Message\RequestInterface $request */
+        $request = $this->history[0]['request'];
+        $this->assertSame('Bearer mocked access token', $request->getHeaderLine('Authorization'));
+        $this->assertStringNotContainsString('slim', $request->getBody()->getContents());
+    }
+
+    public function testUploadSkinSlim() {
+        $this->mockHandler->append(new Response(200));
+        $this->api->uploadSkin('mocked access token', '86f6e3695b764412a29820cac1d4d0d6', 'skin contents', true);
+        /** @var \Psr\Http\Message\RequestInterface $request */
+        $request = $this->history[0]['request'];
+        $this->assertStringContainsString('slim', $request->getBody()->getContents());
+    }
+
+    public function testPlayernamesToUuidsInvalidArgumentException() {
+        $names = [];
+        for ($i = 0; $i < 101; $i++) {
+            $names[] = base64_encode(random_bytes(4));
+        }
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('You cannot request more than 100 names per request');
+        $this->api->playernamesToUuids($names);
     }
 
     public function testAuthenticate() {
@@ -353,23 +370,6 @@ class ApiTest extends TestCase {
     public function testValidateInvalid() {
         $this->mockHandler->append(new Response(403));
         $this->assertFalse($this->api->validate('mocked access token'));
-    }
-
-    public function testUploadSkinNotSlim() {
-        $this->mockHandler->append(new Response(200));
-        $this->api->uploadSkin('mocked access token', '86f6e3695b764412a29820cac1d4d0d6', 'skin contents', false);
-        /** @var \Psr\Http\Message\RequestInterface $request */
-        $request = $this->history[0]['request'];
-        $this->assertSame('Bearer mocked access token', $request->getHeaderLine('Authorization'));
-        $this->assertStringNotContainsString('slim', $request->getBody()->getContents());
-    }
-
-    public function testUploadSkinSlim() {
-        $this->mockHandler->append(new Response(200));
-        $this->api->uploadSkin('mocked access token', '86f6e3695b764412a29820cac1d4d0d6', 'skin contents', true);
-        /** @var \Psr\Http\Message\RequestInterface $request */
-        $request = $this->history[0]['request'];
-        $this->assertStringContainsString('slim', $request->getBody()->getContents());
     }
 
     public function testJoinServer() {
