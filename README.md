@@ -12,8 +12,8 @@ has custom errors handler and automatic retry in case of problems with Mojang.
 [![Total Downloads][ico-downloads]][link-downloads]
 [![Software License][ico-license]](LICENSE.md)
 [![Build Status][ico-build-status]][link-build-status]
-[![Scrutinizer Code Quality](ico-code-quality)][link-scruntinizer-project]
-[![Code Coverage](ico-code-coverage)][link-scruntinizer-project]
+[![Scrutinizer Code Quality][ico-code-quality]][link-scruntinizer-project]
+[![Code Coverage][ico-code-coverage]][link-scruntinizer-project]
 
 ## Installation
 
