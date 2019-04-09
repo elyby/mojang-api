@@ -12,6 +12,8 @@ has custom errors handler and automatic retry in case of problems with Mojang.
 [![Total Downloads][ico-downloads]][link-downloads]
 [![Software License][ico-license]](LICENSE.md)
 [![Build Status][ico-build-status]][link-build-status]
+[![Scrutinizer Code Quality](ico-code-quality)][link-scruntinizer-project]
+[![Code Coverage](ico-code-coverage)][link-scruntinizer-project]
 
 ## Installation
 
@@ -55,8 +57,11 @@ The MIT License (MIT). Please see [License File](LICENSE.md) for more informatio
 [ico-license]: https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square
 [ico-downloads]: https://img.shields.io/packagist/dt/ely/mojang-api.svg?style=flat-square
 [ico-build-status]: https://img.shields.io/travis/elyby/mojang-api/master.svg?style=flat-square
+[ico-code-quality]: https://img.shields.io/scrutinizer/g/elyby/mojang-api.svg?style=flat-square
+[ico-code-coverage]: https://img.shields.io/scrutinizer/coverage/g/elyby/mojang-api.svg?style=flat-square
 
 [link-packagist]: https://packagist.org/packages/ely/mojang-api
 [link-contributors]: ../../contributors
 [link-downloads]: https://packagist.org/packages/ely/mojang-api/stats
 [link-build-status]: https://travis-ci.org/elyby/mojang-api
+[link-scruntinizer-project]: https://scrutinizer-ci.com/g/elyby/mojang-api
