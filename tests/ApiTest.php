@@ -251,11 +251,32 @@ class ApiTest extends TestCase {
         $this->assertStringStartsWith('https://sessionserver.mojang.com/session/minecraft/profile/86f6e3695b764412a29820cac1d4d0d6', (string)$request2->getUri());
     }
 
+    public function testChangeSkinNotSlim() {
+        $this->mockHandler->append(new Response(200));
+        $this->api->changeSkin('mocked access token', '86f6e3695b764412a29820cac1d4d0d6', 'http://localhost/skin.png', false);
+        /** @var \Psr\Http\Message\RequestInterface $request */
+        $request = $this->history[0]['request'];
+        $this->assertSame('https://api.mojang.com/user/profile/86f6e3695b764412a29820cac1d4d0d6/skin', (string)$request->getUri());
+        $this->assertSame('Bearer mocked access token', $request->getHeaderLine('Authorization'));
+        $body = urldecode($request->getBody()->getContents());
+        $this->assertStringContainsString('url=http://localhost/skin.png', $body);
+        $this->assertStringNotContainsString('model=slim', $body);
+    }
+
+    public function testChangeSkinSlim() {
+        $this->mockHandler->append(new Response(200));
+        $this->api->changeSkin('mocked access token', '86f6e3695b764412a29820cac1d4d0d6', 'http://localhost/skin.png', true);
+        /** @var \Psr\Http\Message\RequestInterface $request */
+        $request = $this->history[0]['request'];
+        $this->assertStringContainsString('model=slim', $request->getBody()->getContents());
+    }
+
     public function testUploadSkinNotSlim() {
         $this->mockHandler->append(new Response(200));
         $this->api->uploadSkin('mocked access token', '86f6e3695b764412a29820cac1d4d0d6', 'skin contents', false);
         /** @var \Psr\Http\Message\RequestInterface $request */
         $request = $this->history[0]['request'];
+        $this->assertSame('https://api.mojang.com/user/profile/86f6e3695b764412a29820cac1d4d0d6/skin', (string)$request->getUri());
         $this->assertSame('Bearer mocked access token', $request->getHeaderLine('Authorization'));
         $this->assertStringNotContainsString('slim', $request->getBody()->getContents());
     }
@@ -265,6 +286,7 @@ class ApiTest extends TestCase {
         $this->api->uploadSkin('mocked access token', '86f6e3695b764412a29820cac1d4d0d6', 'skin contents', true);
         /** @var \Psr\Http\Message\RequestInterface $request */
         $request = $this->history[0]['request'];
+        $this->assertSame('https://api.mojang.com/user/profile/86f6e3695b764412a29820cac1d4d0d6/skin', (string)$request->getUri());
         $this->assertStringContainsString('slim', $request->getBody()->getContents());
     }
 

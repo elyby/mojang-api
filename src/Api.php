@@ -180,6 +180,29 @@ class Api {
     /**
      * @param string $accessToken
      * @param string $accountUuid
+     * @param string $skinUrl
+     * @param bool $isSlim
+     *
+     * @throws \Ely\Mojang\Exception\MojangApiException
+     * @throws GuzzleException
+     *
+     * @url https://wiki.vg/Mojang_API#Change_Skin
+     */
+    public function changeSkin(string $accessToken, string $accountUuid, string $skinUrl, bool $isSlim): void {
+        $this->getClient()->request('POST', "https://api.mojang.com/user/profile/{$accountUuid}/skin", [
+            'form_params' => [
+                'model' => $isSlim ? 'slim' : '',
+                'url' => $skinUrl,
+            ],
+            'headers' => [
+                'Authorization' => 'Bearer ' . $accessToken,
+            ],
+        ]);
+    }
+
+    /**
+     * @param string $accessToken
+     * @param string $accountUuid
      * @param \Psr\Http\Message\StreamInterface|resource|string $skinContents
      * @param bool $isSlim
      *
