@@ -310,6 +310,21 @@ class ApiTest extends TestCase {
         $this->api->playernamesToUuids($names);
     }
 
+    public function testBlockedServers() {
+        $this->mockHandler->append(new Response(200, [], trim('
+            6f2520f8bd70a718c568ab5274c56bdbbfc14ef4
+            7ea72de5f8e70a2ac45f1aa17d43f0ca3cddeedd
+            c005ad34245a8f2105658da2d6d6e8545ef0f0de
+            c645d6c6430db3069abd291ec13afebdb320714b
+        ') . "\n"));
+
+        $result = $this->api->blockedServers();
+        /** @var \Psr\Http\Message\RequestInterface $request */
+        $request = $this->history[0]['request'];
+        $this->assertSame('https://sessionserver.mojang.com/blockedservers', (string)$request->getUri());
+        $this->assertCount(4, $result);
+    }
+
     public function testAuthenticate() {
         $this->mockHandler->append($this->createResponse(200, [
             'accessToken' => 'access token value',

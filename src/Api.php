@@ -247,6 +247,20 @@ class Api {
     }
 
     /**
+     * @return Response\BlockedServersCollection
+     *
+     * @throws GuzzleException
+     *
+     * @url https://wiki.vg/Mojang_API#Blocked_Servers
+     */
+    public function blockedServers(): Response\BlockedServersCollection {
+        $response = $this->getClient()->request('GET', 'https://sessionserver.mojang.com/blockedservers');
+        $hashes = explode("\n", trim($response->getBody()->getContents()));
+
+        return new Response\BlockedServersCollection($hashes);
+    }
+
+    /**
      * @param string $login
      * @param string $password
      * @param string $clientToken

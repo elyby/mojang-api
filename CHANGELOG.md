@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Playernames -> UUIDs](https://wiki.vg/Mojang_API#Playernames_-.3E_UUIDs) endpoint.
 - [Change Skin](https://wiki.vg/Mojang_API#Change_Skin) endpoint.
 - [Reset Skin](https://wiki.vg/Mojang_API#Reset_Skin) endpoint.
+- [Blocked Servers](https://wiki.vg/Mojang_API#Blocked_Servers) endpoint.
 
 ### Changed
 - The constructor no longer has arguments.
