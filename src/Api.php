@@ -230,6 +230,23 @@ class Api {
     }
 
     /**
+     * @param string $accessToken
+     * @param string $accountUuid
+     *
+     * @throws \Ely\Mojang\Exception\MojangApiException
+     * @throws GuzzleException
+     *
+     * @url https://wiki.vg/Mojang_API#Reset_Skin
+     */
+    public function resetSkin(string $accessToken, string $accountUuid): void {
+        $this->getClient()->request('DELETE', "https://api.mojang.com/user/profile/{$accountUuid}/skin", [
+            'headers' => [
+                'Authorization' => 'Bearer ' . $accessToken,
+            ],
+        ]);
+    }
+
+    /**
      * @param string $login
      * @param string $password
      * @param string $clientToken

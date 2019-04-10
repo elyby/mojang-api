@@ -290,6 +290,15 @@ class ApiTest extends TestCase {
         $this->assertStringContainsString('slim', $request->getBody()->getContents());
     }
 
+    public function testResetSkin() {
+        $this->mockHandler->append(new Response(200));
+        $this->api->resetSkin('mocked access token', '86f6e3695b764412a29820cac1d4d0d6');
+        /** @var \Psr\Http\Message\RequestInterface $request */
+        $request = $this->history[0]['request'];
+        $this->assertSame('https://api.mojang.com/user/profile/86f6e3695b764412a29820cac1d4d0d6/skin', (string)$request->getUri());
+        $this->assertSame('Bearer mocked access token', $request->getHeaderLine('Authorization'));
+    }
+
     public function testPlayernamesToUuidsInvalidArgumentException() {
         $names = [];
         for ($i = 0; $i < 101; $i++) {
