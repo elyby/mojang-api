@@ -410,12 +410,26 @@ class ApiTest extends TestCase {
 
     public function testValidateSuccessful() {
         $this->mockHandler->append(new Response(204));
-        $this->assertTrue($this->api->validate('mocked access token'));
+
+        $result = $this->api->validate('mocked access token');
+
+        /** @var \Psr\Http\Message\RequestInterface $request */
+        $request = $this->history[0]['request'];
+        $this->assertSame('https://authserver.mojang.com/validate', (string)$request->getUri());
+
+        $this->assertTrue($result);
     }
 
     public function testValidateInvalid() {
         $this->mockHandler->append(new Response(403));
-        $this->assertFalse($this->api->validate('mocked access token'));
+
+        $result = $this->api->validate('mocked access token');
+
+        /** @var \Psr\Http\Message\RequestInterface $request */
+        $request = $this->history[0]['request'];
+        $this->assertSame('https://authserver.mojang.com/validate', (string)$request->getUri());
+
+        $this->assertFalse($result);
     }
 
     public function testJoinServer() {

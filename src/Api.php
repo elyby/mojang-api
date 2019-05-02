@@ -315,7 +315,7 @@ class Api {
      */
     public function validate(string $accessToken): bool {
         try {
-            $response = $this->getClient()->request('POST', 'https://authserver.mojang.com/authenticate', [
+            $response = $this->getClient()->request('POST', 'https://authserver.mojang.com/validate', [
                 'json' => [
                     'accessToken' => $accessToken,
                 ],
