@@ -306,6 +306,34 @@ class Api {
 
     /**
      * @param string $accessToken
+     * @param string $clientToken
+     *
+     * @return \Ely\Mojang\Response\RefreshResponse
+     *
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     *
+     * @url https://wiki.vg/Authentication#Refresh
+     */
+    public function refresh(string $accessToken, string $clientToken): Response\RefreshResponse {
+        $response = $this->getClient()->request('POST', 'https://authserver.mojang.com/refresh', [
+            'json' => [
+                'accessToken' => $accessToken,
+                'clientToken' => $clientToken,
+                'requestUser' => true,
+            ],
+        ]);
+        $body = $this->decode($response->getBody()->getContents());
+
+        return new Response\RefreshResponse(
+            $body['accessToken'],
+            $body['clientToken'],
+            $body['selectedProfile'],
+            $body['user']
+        );
+    }
+
+    /**
+     * @param string $accessToken
      *
      * @return bool
      *
@@ -328,6 +356,40 @@ class Api {
         }
 
         return false;
+    }
+
+    /**
+     * @param string $accessToken
+     * @param string $clientToken
+     *
+     * @throws GuzzleException
+     *
+     * @url https://wiki.vg/Authentication#Invalidate
+     */
+    public function invalidate(string $accessToken, string $clientToken): void {
+        $this->getClient()->request('POST', 'https://authserver.mojang.com/invalidate', [
+            'json' => [
+                'accessToken' => $accessToken,
+                'clientToken' => $clientToken,
+            ],
+        ]);
+    }
+
+    /**
+     * @param string $login
+     * @param string $password
+     *
+     * @throws GuzzleException
+     *
+     * @url https://wiki.vg/Authentication#Signout
+     */
+    public function signout(string $login, string $password): void {
+        $this->getClient()->request('POST', 'https://authserver.mojang.com/signout', [
+            'json' => [
+                'username' => $login,
+                'password' => $password,
+            ],
+        ]);
     }
 
     /**
