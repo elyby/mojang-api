@@ -154,7 +154,7 @@ class Api {
             throw new InvalidArgumentException('You cannot request more than 100 names per request');
         }
 
-        $response = $this->getClient()->request('POST', 'https://authserver.mojang.com/authenticate', [
+        $response = $this->getClient()->request('POST', 'https://api.mojang.com/profiles/minecraft', [
             'json' => array_values($names),
         ]);
         $body = $this->decode($response->getBody()->getContents());

@@ -219,8 +219,10 @@ class ApiTest extends TestCase {
 
         /** @var \Psr\Http\Message\RequestInterface $request */
         $request = $this->history[0]['request'];
-        $body = json_decode($request->getBody()->getContents(), true);
-        $this->assertSame(['mockusername', 'nonexists'], $body);
+        $this->assertSame('https://api.mojang.com/profiles/minecraft', (string)$request->getUri());
+        $this->assertSame('application/json', $request->getHeaderLine('Content-Type'));
+        $body = $request->getBody()->getContents();
+        $this->assertJsonStringEqualsJsonString('["mockusername", "nonexists"]', $body);
 
         $this->assertCount(1, $result);
         $this->assertContainsOnlyInstancesOf(ProfileInfo::class, $result);
@@ -423,10 +425,15 @@ class ApiTest extends TestCase {
         $this->api->joinServer('mocked access token', '86f6e3695b764412a29820cac1d4d0d6', 'ad72fe1efe364e6eb78c644a9fba1d30');
         /** @var \Psr\Http\Message\RequestInterface $request */
         $request = $this->history[0]['request'];
-        $params = json_decode($request->getBody()->getContents(), true);
-        $this->assertSame('mocked access token', $params['accessToken']);
-        $this->assertSame('86f6e3695b764412a29820cac1d4d0d6', $params['selectedProfile']);
-        $this->assertSame('ad72fe1efe364e6eb78c644a9fba1d30', $params['serverId']);
+        $body = $request->getBody()->getContents();
+        $this->assertSame('application/json', $request->getHeaderLine('Content-Type'));
+        $this->assertJsonStringEqualsJsonString('
+            {
+                "accessToken": "mocked access token",
+                "selectedProfile": "86f6e3695b764412a29820cac1d4d0d6",
+                "serverId": "ad72fe1efe364e6eb78c644a9fba1d30"
+            }
+        ', $body);
     }
 
     public function testHasJoinedServer() {
