@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Ely\Mojang\Test;
 
 use Ely\Mojang\Api;
+use Ely\Mojang\Exception\ForbiddenException;
 use Ely\Mojang\Exception\NoContentException;
 use Ely\Mojang\Middleware\ResponseConverterMiddleware;
 use Ely\Mojang\Middleware\RetryMiddleware;
@@ -408,7 +409,13 @@ class ApiTest extends TestCase {
         $this->assertRegExp('/^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i', $body['clientToken']);
     }
 
-    public function testRefresh() {
+    public function testAuthenticateInvalid() {
+        $this->mockHandler->append(new Response(403));
+        $this->expectException(ForbiddenException::class);
+        $this->api->authenticate('MockUsername', 'some password');
+    }
+
+    public function testRefreshSuccessful() {
         $this->mockHandler->append($this->createResponse(200, [
             'accessToken' => 'new access token value',
             'clientToken' => 'client token value',
@@ -453,6 +460,12 @@ class ApiTest extends TestCase {
         $this->assertSame('twitch oauth token', $result->getUser()->getProperties()[1]->getValue());
     }
 
+    public function testRefreshInvalid() {
+        $this->mockHandler->append(new Response(403));
+        $this->expectException(ForbiddenException::class);
+        $this->api->refresh('access token value', 'client token value');
+    }
+
     public function testValidateSuccessful() {
         $this->mockHandler->append(new Response(204));
 
@@ -477,7 +490,7 @@ class ApiTest extends TestCase {
         $this->assertFalse($result);
     }
 
-    public function testInvalidate() {
+    public function testInvalidateSuccessful() {
         $this->mockHandler->append(new Response(200));
         $this->api->invalidate('mocked access token', 'mocked client token');
         /** @var \Psr\Http\Message\RequestInterface $request */
@@ -490,17 +503,26 @@ class ApiTest extends TestCase {
         $this->assertSame('mocked client token', $params['clientToken']);
     }
 
-    public function testSignout() {
-        $this->mockHandler->append(new Response(200));
-        $this->api->signout('MockUsername', 'some password');
+    public function testSignoutSuccessful() {
+        $this->mockHandler->append(new Response(204));
+        $result = $this->api->signout('MockUsername', 'some password');
         /** @var \Psr\Http\Message\RequestInterface $request */
         $request = $this->history[0]['request'];
-        $params = json_decode($request->getBody()->getContents(), true);
 
         $this->assertSame('https://authserver.mojang.com/signout', (string)$request->getUri());
 
-        $this->assertSame('MockUsername', $params['username']);
-        $this->assertSame('some password', $params['password']);
+        $this->assertTrue($result);
+    }
+
+    public function testSignoutInvalid() {
+        $this->mockHandler->append(new Response(403));
+        $result = $this->api->signout('MockUsername', 'some password');
+        /** @var \Psr\Http\Message\RequestInterface $request */
+        $request = $this->history[0]['request'];
+
+        $this->assertSame('https://authserver.mojang.com/signout', (string)$request->getUri());
+
+        $this->assertFalse($result);
     }
 
     public function testJoinServer() {

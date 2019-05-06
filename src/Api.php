@@ -308,13 +308,13 @@ class Api {
      * @param string $accessToken
      * @param string $clientToken
      *
-     * @return \Ely\Mojang\Response\RefreshResponse
+     * @return \Ely\Mojang\Response\AuthenticateResponse
      *
      * @throws \GuzzleHttp\Exception\GuzzleException
      *
      * @url https://wiki.vg/Authentication#Refresh
      */
-    public function refresh(string $accessToken, string $clientToken): Response\RefreshResponse {
+    public function refresh(string $accessToken, string $clientToken): Response\AuthenticateResponse {
         $response = $this->getClient()->request('POST', 'https://authserver.mojang.com/refresh', [
             'json' => [
                 'accessToken' => $accessToken,
@@ -324,9 +324,10 @@ class Api {
         ]);
         $body = $this->decode($response->getBody()->getContents());
 
-        return new Response\RefreshResponse(
+        return new Response\AuthenticateResponse(
             $body['accessToken'],
             $body['clientToken'],
+            [],
             $body['selectedProfile'],
             $body['user']
         );
@@ -379,17 +380,28 @@ class Api {
      * @param string $login
      * @param string $password
      *
+     * @return bool
+     *
      * @throws GuzzleException
      *
      * @url https://wiki.vg/Authentication#Signout
      */
-    public function signout(string $login, string $password): void {
-        $this->getClient()->request('POST', 'https://authserver.mojang.com/signout', [
-            'json' => [
-                'username' => $login,
-                'password' => $password,
-            ],
-        ]);
+    public function signout(string $login, string $password): bool {
+        try {
+            $response = $this->getClient()->request('POST', 'https://authserver.mojang.com/signout', [
+                'json' => [
+                    'username' => $login,
+                    'password' => $password,
+                ],
+            ]);
+            if ($response->getStatusCode() === 204) {
+                return true;
+            }
+        } catch (Exception\ForbiddenException $e) {
+            // Suppress exception and let it just exit below
+        }
+
+        return false;
     }
 
     /**
