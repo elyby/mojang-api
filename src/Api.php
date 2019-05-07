@@ -306,6 +306,35 @@ class Api {
 
     /**
      * @param string $accessToken
+     * @param string $clientToken
+     *
+     * @return \Ely\Mojang\Response\AuthenticateResponse
+     *
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     *
+     * @url https://wiki.vg/Authentication#Refresh
+     */
+    public function refresh(string $accessToken, string $clientToken): Response\AuthenticateResponse {
+        $response = $this->getClient()->request('POST', 'https://authserver.mojang.com/refresh', [
+            'json' => [
+                'accessToken' => $accessToken,
+                'clientToken' => $clientToken,
+                'requestUser' => true,
+            ],
+        ]);
+        $body = $this->decode($response->getBody()->getContents());
+
+        return new Response\AuthenticateResponse(
+            $body['accessToken'],
+            $body['clientToken'],
+            [],
+            $body['selectedProfile'],
+            $body['user']
+        );
+    }
+
+    /**
+     * @param string $accessToken
      *
      * @return bool
      *
@@ -315,9 +344,54 @@ class Api {
      */
     public function validate(string $accessToken): bool {
         try {
-            $response = $this->getClient()->request('POST', 'https://authserver.mojang.com/authenticate', [
+            $response = $this->getClient()->request('POST', 'https://authserver.mojang.com/validate', [
                 'json' => [
                     'accessToken' => $accessToken,
+                ],
+            ]);
+            if ($response->getStatusCode() === 204) {
+                return true;
+            }
+        } catch (Exception\ForbiddenException $e) {
+            // Suppress exception and let it just exit below
+        }
+
+        return false;
+    }
+
+    /**
+     * @param string $accessToken
+     * @param string $clientToken
+     *
+     * @throws GuzzleException
+     *
+     * @url https://wiki.vg/Authentication#Invalidate
+     */
+    public function invalidate(string $accessToken, string $clientToken): void {
+        $this->getClient()->request('POST', 'https://authserver.mojang.com/invalidate', [
+            'json' => [
+                'accessToken' => $accessToken,
+                'clientToken' => $clientToken,
+            ],
+        ]);
+    }
+
+    /**
+     * @param string $login
+     * @param string $password
+     *
+     * @return bool
+     *
+     * @throws GuzzleException
+     *
+     * @url https://wiki.vg/Authentication#Signout
+     */
+    public function signout(string $login, string $password): bool {
+        try {
+            $response = $this->getClient()->request('POST', 'https://authserver.mojang.com/signout', [
+                'json' => [
+                    'username' => $login,
+                    'password' => $password,
                 ],
             ]);
             if ($response->getStatusCode() === 204) {
