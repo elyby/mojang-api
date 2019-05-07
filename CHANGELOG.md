@@ -16,9 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Change Skin](https://wiki.vg/Mojang_API#Change_Skin) endpoint.
 - [Reset Skin](https://wiki.vg/Mojang_API#Reset_Skin) endpoint.
 - [Blocked Servers](https://wiki.vg/Mojang_API#Blocked_Servers) endpoint.
-- [Authenticate](https://wiki.vg/Authentication#Authenticate) endpoint.
 - [Refresh](https://wiki.vg/Authentication#Refresh) endpoint.
-- [Validate](https://wiki.vg/Authentication#Validate) endpoint.
 - [Signout](https://wiki.vg/Authentication#Signout) endpoint.
 - [Invalidate](https://wiki.vg/Authentication#Invalidate) endpoint.
 
@@ -27,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Change `static` to `self` in `\Ely\Mojang\Response\Properties\Factory` to allow its extending.
+- Fix `validate` endpoint URL.
 
 ### Removed
 - `\Ely\Mojang\Api::create()` static method. Use constructor instead.
