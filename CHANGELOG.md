@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.2.0] - no date
+## [0.2.0] - 2019-05-07
 ### Added
 - This CHANGELOG.md file.
 - `\Ely\Mojang\Api::setClient()` method to override default HTTP client.
@@ -34,6 +34,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial implementation
 
-[Unreleased]: https://github.com/elyby/mojang-api/compare/v0.2.0...HEAD
-[0.2.0]: https://github.com/elyby/mojang-api/compare/v0.1.0...v0.2.0
+[Unreleased]: https://github.com/elyby/mojang-api/compare/0.2.0...HEAD
+[0.2.0]: https://github.com/elyby/mojang-api/compare/0.1.0...0.2.0
 [0.1.0]: https://github.com/elyby/mojang-api/releases/tag/0.1.0

@@ -4,10 +4,6 @@ This package provides easy access to the Minecraft related API of Mojang.
 The library is built on the top of the [Guzzle HTTP client](https://github.com/guzzle/guzzle),
 has custom errors handler and automatic retry in case of problems with Mojang.
 
-> Please note that this is not a complete implementation of all available APIs. 
-  If you don't find the method you need, [open Issue](https://github.com/elyby/mojang-api/issues/new)
-  or [submit a PR](https://github.com/elyby/mojang-api/compare) with the implementation.
-
 [![Latest Version on Packagist][ico-version]][link-packagist]
 [![Total Downloads][ico-downloads]][link-downloads]
 [![Software License][ico-license]](LICENSE.md)
