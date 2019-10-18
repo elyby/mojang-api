@@ -6,12 +6,15 @@ namespace Ely\Mojang\Test;
 use Ely\Mojang\Api;
 use Ely\Mojang\Exception\ForbiddenException;
 use Ely\Mojang\Exception\NoContentException;
+use Ely\Mojang\Exception\OperationException;
 use Ely\Mojang\Middleware\ResponseConverterMiddleware;
 use Ely\Mojang\Middleware\RetryMiddleware;
+use Ely\Mojang\Response\AnswerResponse;
 use Ely\Mojang\Response\ApiStatus;
 use Ely\Mojang\Response\NameHistoryItem;
 use Ely\Mojang\Response\ProfileInfo;
 use Ely\Mojang\Response\Properties\TexturesProperty;
+use Ely\Mojang\Response\QuestionResponse;
 use GuzzleHttp\Client;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Handler\MockHandler;
@@ -309,7 +312,7 @@ class ApiTest extends TestCase {
         }
 
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('You cannot request more than 100 names per request');
+        $this->expectExceptionMessage('You cannot request more than 10 names per request');
         $this->api->playernamesToUuids($names);
     }
 
@@ -607,6 +610,144 @@ class ApiTest extends TestCase {
             }
         };
         $this->assertInstanceOf(ClientInterface::class, $child->getDefaultClient());
+    }
+
+    public function testIsSecurityQuestionsNeeded() {
+        $this->mockHandler->append(new Response(204));
+        $this->expectException(NoContentException::class);
+        $this->api->isSecurityQuestionsNeeded('mocked access token');
+    }
+
+    public function testIsSecurityQuestionsNeededOperationException() {
+        $this->mockHandler->append($this->createResponse(200, [
+            'error' => 'ForbiddenOperationException',
+            'errorMessage' => 'Current IP is not secured',
+        ]));
+        $this->expectException(OperationException::class);
+        $this->api->isSecurityQuestionsNeeded('mocked access token');
+    }
+
+    public function testQuestions() {
+        $this->mockHandler->append($this->createResponse(200, [
+            [
+                'answer' => [
+                    'id' => 123,
+                ],
+                'question' => [
+                    'id' => 1,
+                    'question' => 'What is your favorite pet\'s name?',
+                ],
+            ],
+            [
+                'answer' => [
+                    'id' => 456,
+                ],
+                'question' => [
+                    'id' => 2,
+                    'question' => 'What is your favorite movie?',
+                ],
+            ],
+            [
+                'answer' => [
+                    'id' => 789,
+                ],
+                'question' => [
+                    'id' => 3,
+                    'question' => 'What is your favorite author\'s last name?',
+                ],
+            ],
+        ]));
+        $result = $this->api->questions('mocked access token');
+        /** @var \Psr\Http\Message\RequestInterface $request */
+        $request = $this->history[0]['request'];
+        $this->assertSame('Bearer mocked access token', $request->getHeaderLine('Authorization'));
+
+        foreach ($result as $question) {
+            $this->assertArrayHasKey('answer', $question);
+            $this->assertArrayHasKey('question', $question);
+            $this->assertInstanceOf(AnswerResponse::class, $question['answer']);
+            $this->assertInstanceOf(QuestionResponse::class, $question['question']);
+        }
+
+        /** @var AnswerResponse $firstAnswer */
+        $firstAnswer = $result[0]['answer'];
+        /** @var QuestionResponse $firstQuestion */
+        $firstQuestion = $result[0]['question'];
+        $this->assertSame(123, $firstAnswer->getId());
+        $this->assertNull($firstAnswer->getAnswer());
+        $this->assertSame(1, $firstQuestion->getId());
+        $this->assertSame('What is your favorite pet\'s name?', $firstQuestion->getQuestion());
+
+        /** @var AnswerResponse $secondAnswer */
+        $secondAnswer = $result[1]['answer'];
+        /** @var QuestionResponse $secondQuestion */
+        $secondQuestion = $result[1]['question'];
+        $this->assertSame(456, $secondAnswer->getId());
+        $this->assertNull($secondAnswer->getAnswer());
+        $this->assertSame(2, $secondQuestion->getId());
+        $this->assertSame('What is your favorite movie?', $secondQuestion->getQuestion());
+
+        /** @var AnswerResponse $thirdAnswer */
+        $thirdAnswer = $result[2]['answer'];
+        /** @var QuestionResponse $thirdQuestion */
+        $thirdQuestion = $result[2]['question'];
+        $this->assertSame(789, $thirdAnswer->getId());
+        $this->assertNull($thirdAnswer->getAnswer());
+        $this->assertSame(3, $thirdQuestion->getId());
+        $this->assertSame('What is your favorite author\'s last name?', $thirdQuestion->getQuestion());
+    }
+
+    public function testAnswerOperationException() {
+        $this->mockHandler->append($this->createResponse(200, [
+            'error' => 'ForbiddenOperationException',
+            'errorMessage' => 'At least one answer was incorrect',
+        ]));
+        $this->expectException(OperationException::class);
+        $this->api->answer('mocked access token', [
+            [
+                'id' => 123,
+                'answer' => 'foo',
+            ],
+            [
+                'id' => 456,
+                'answer' => 'bar',
+            ],
+        ]);
+    }
+
+    public function testAnswer() {
+        $this->mockHandler->append(new Response(204));
+        $this->expectException(NoContentException::class);
+        $this->api->isSecurityQuestionsNeeded('mocked access token');
+    }
+
+    public function testStatistics() {
+        $this->mockHandler->append($this->createResponse(200, [
+            'total' => 145,
+            'last24h' => 13,
+            'saleVelocityPerSeconds' => 1.32,
+        ]));
+        $result = $this->api->statistics([
+            'metricKeys' => [
+                'item_sold_minecraft',
+                'prepaid_card_redeemed_minecraft',
+                'item_sold_cobalt',
+                'item_sold_scrolls',
+            ],
+        ]);
+        /** @var \Psr\Http\Message\RequestInterface $request */
+        $request = $this->history[0]['request'];
+        $params = json_decode($request->getBody()->getContents(), true);
+        $this->assertSame([
+            'item_sold_minecraft',
+            'prepaid_card_redeemed_minecraft',
+            'item_sold_cobalt',
+            'item_sold_scrolls',
+        ], $params['metricKeys']);
+
+        $this->assertSame(145, $result->getTotal());
+        $this->assertSame(13, $result->getLast24H());
+        $this->assertSame(1.32, $result->getSaleVelocityPerSeconds());
     }
 
     private function createResponse(int $statusCode, array $response): ResponseInterface {
