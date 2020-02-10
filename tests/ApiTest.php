@@ -9,7 +9,6 @@ use Ely\Mojang\Exception\NoContentException;
 use Ely\Mojang\Exception\OperationException;
 use Ely\Mojang\Middleware\ResponseConverterMiddleware;
 use Ely\Mojang\Middleware\RetryMiddleware;
-use Ely\Mojang\Response\AnswerResponse;
 use Ely\Mojang\Response\ApiStatus;
 use Ely\Mojang\Response\NameHistoryItem;
 use Ely\Mojang\Response\ProfileInfo;
@@ -663,37 +662,25 @@ class ApiTest extends TestCase {
         $this->assertSame('Bearer mocked access token', $request->getHeaderLine('Authorization'));
 
         foreach ($result as $question) {
-            $this->assertArrayHasKey('answer', $question);
-            $this->assertArrayHasKey('question', $question);
-            $this->assertInstanceOf(AnswerResponse::class, $question['answer']);
-            $this->assertInstanceOf(QuestionResponse::class, $question['question']);
+            $this->assertInstanceOf(QuestionResponse::class, $question);
         }
 
-        /** @var AnswerResponse $firstAnswer */
-        $firstAnswer = $result[0]['answer'];
         /** @var QuestionResponse $firstQuestion */
-        $firstQuestion = $result[0]['question'];
-        $this->assertSame(123, $firstAnswer->getId());
-        $this->assertNull($firstAnswer->getAnswer());
-        $this->assertSame(1, $firstQuestion->getId());
+        $firstQuestion = $result[0];
+        $this->assertSame(123, $firstQuestion->getAnswerId());
+        $this->assertSame(1, $firstQuestion->getQuestionId());
         $this->assertSame('What is your favorite pet\'s name?', $firstQuestion->getQuestion());
 
-        /** @var AnswerResponse $secondAnswer */
-        $secondAnswer = $result[1]['answer'];
         /** @var QuestionResponse $secondQuestion */
-        $secondQuestion = $result[1]['question'];
-        $this->assertSame(456, $secondAnswer->getId());
-        $this->assertNull($secondAnswer->getAnswer());
-        $this->assertSame(2, $secondQuestion->getId());
+        $secondQuestion = $result[1];
+        $this->assertSame(456, $secondQuestion->getAnswerId());
+        $this->assertSame(2, $secondQuestion->getQuestionId());
         $this->assertSame('What is your favorite movie?', $secondQuestion->getQuestion());
 
-        /** @var AnswerResponse $thirdAnswer */
-        $thirdAnswer = $result[2]['answer'];
         /** @var QuestionResponse $thirdQuestion */
-        $thirdQuestion = $result[2]['question'];
-        $this->assertSame(789, $thirdAnswer->getId());
-        $this->assertNull($thirdAnswer->getAnswer());
-        $this->assertSame(3, $thirdQuestion->getId());
+        $thirdQuestion = $result[2];
+        $this->assertSame(789, $thirdQuestion->getAnswerId());
+        $this->assertSame(3, $thirdQuestion->getQuestionId());
         $this->assertSame('What is your favorite author\'s last name?', $thirdQuestion->getQuestion());
     }
 
@@ -702,8 +689,7 @@ class ApiTest extends TestCase {
             'error' => 'ForbiddenOperationException',
             'errorMessage' => 'At least one answer was incorrect',
         ]));
-        $this->expectException(OperationException::class);
-        $this->api->answer('mocked access token', [
+        $result = $this->api->answer('mocked access token', [
             [
                 'id' => 123,
                 'answer' => 'foo',
@@ -713,6 +699,7 @@ class ApiTest extends TestCase {
                 'answer' => 'bar',
             ],
         ]);
+        $this->assertFalse($result);
     }
 
     public function testAnswer() {
@@ -728,12 +715,10 @@ class ApiTest extends TestCase {
             'saleVelocityPerSeconds' => 1.32,
         ]));
         $result = $this->api->statistics([
-            'metricKeys' => [
-                'item_sold_minecraft',
-                'prepaid_card_redeemed_minecraft',
-                'item_sold_cobalt',
-                'item_sold_scrolls',
-            ],
+            'item_sold_minecraft',
+            'prepaid_card_redeemed_minecraft',
+            'item_sold_cobalt',
+            'item_sold_scrolls',
         ]);
         /** @var \Psr\Http\Message\RequestInterface $request */
         $request = $this->history[0]['request'];

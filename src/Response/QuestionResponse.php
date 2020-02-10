@@ -8,24 +8,34 @@ class QuestionResponse {
     /**
      * @var int
      */
-    private $id;
+    private $questionId;
 
     /**
      * @var string
      */
     private $question;
 
-    public function __construct(int $id, string $question) {
-        $this->id = $id;
+    /**
+     * @var int
+     */
+    private $answerId;
+
+    public function __construct(int $questionId, string $question, int $answerId) {
+        $this->questionId = $questionId;
         $this->question = $question;
+        $this->answerId = $answerId;
     }
 
-    public function getId(): int {
-        return $this->id;
+    public function getQuestionId(): int {
+        return $this->questionId;
     }
 
     public function getQuestion(): string {
         return $this->question;
+    }
+
+    public function getAnswerId(): int {
+        return $this->answerId;
     }
 
 }

@@ -6,7 +6,6 @@ namespace Ely\Mojang;
 use DateTime;
 use Ely\Mojang\Middleware\ResponseConverterMiddleware;
 use Ely\Mojang\Middleware\RetryMiddleware;
-use Ely\Mojang\Response\AnswerResponse;
 use Ely\Mojang\Response\QuestionResponse;
 use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\ClientInterface;
@@ -461,8 +460,11 @@ class Api {
      * @url https://wiki.vg/Mojang_API#Check_if_security_questions_are_needed
      */
     public function isSecurityQuestionsNeeded(string $accessToken): void {
-        $uri = new Uri('https://api.mojang.com/user/security/location');
-        $request = new Request('GET', $uri, ['Authorization' => 'Bearer ' . $accessToken]);
+        $request = new Request(
+            'GET',
+            'https://api.mojang.com/user/security/location',
+            ['Authorization' => 'Bearer ' . $accessToken]
+        );
         $response = $this->getClient()->send($request);
         $rawBody = $response->getBody()->getContents();
         if (!empty($rawBody)) {
@@ -479,21 +481,16 @@ class Api {
      * @url https://wiki.vg/Mojang_API#Get_list_of_questions
      */
     public function questions(string $accessToken): array {
-        $uri = new Uri('https://api.mojang.com/user/security/challenges');
-        $request = new Request('GET', $uri, ['Authorization' => 'Bearer ' . $accessToken]);
+        $request = new Request(
+            'GET',
+            'https://api.mojang.com/user/security/challenges',
+            ['Authorization' => 'Bearer ' . $accessToken]
+        );
         $response = $this->getClient()->send($request);
-        $rawBody = $response->getBody()->getContents();
-        if (empty($rawBody)) {
-            throw new Exception\NoContentException($request, $response);
-        }
-
         $result = [];
-        $body = $this->decode($rawBody);
+        $body = $this->decode($response->getBody()->getContents());
         foreach ($body as $question) {
-            $result[] = [
-                'answer' => new AnswerResponse($question['answer']['id']),
-                'question' => new QuestionResponse($question['question']['id'], $question['question']['question']),
-            ];
+            $result[] = new QuestionResponse($question['question']['id'], $question['question']['question'], $question['answer']['id']);
         }
 
         return $result;
@@ -503,18 +500,21 @@ class Api {
      * @param string $accessToken
      * @param array $answers
      * @throws GuzzleException
+     * @return bool
      *
      * @url https://wiki.vg/Mojang_API#Send_back_the_answers
      */
-    public function answer(string $accessToken, array $answers): void {
-        $uri = new Uri('https://api.mojang.com/user/security/location');
-        $request = new Request('POST', $uri, ['Authorization' => 'Bearer ' . $accessToken], json_encode($answers));
+    public function answer(string $accessToken, array $answers): bool {
+        $request = new Request(
+            'POST',
+            'https://api.mojang.com/user/security/location',
+            ['Authorization' => 'Bearer ' . $accessToken],
+            json_encode($answers)
+        );
         $response = $this->getClient()->send($request);
         $rawBody = $response->getBody()->getContents();
-        if (!empty($rawBody)) {
-            $body = $this->decode($rawBody);
-            throw new Exception\OperationException($body['errorMessage'], $request, $response);
-        }
+
+        return empty($rawBody);
     }
 
     /**
@@ -526,7 +526,9 @@ class Api {
      */
     public function statistics(array $metricKeys) {
         $response = $this->getClient()->request('POST', 'https://api.mojang.com/orders/statistics', [
-            'json' => $metricKeys,
+            'json' => [
+                'metricKeys' => $metricKeys,
+            ],
         ]);
         $body = $this->decode($response->getBody()->getContents());
 
