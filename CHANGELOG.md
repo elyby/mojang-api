@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Get list of questions](https://wiki.vg/Mojang_API#Get_list_of_questions) endpoint.
 - [Send back the answers](https://wiki.vg/Mojang_API#Send_back_the_answers) endpoint.
 - [Statistics](https://wiki.vg/Mojang_API#Statistics) endpoint.
+- Allow `ramsey/uuid` v4.
+- Allow `guzzlehttp/guzzle` v7.
 
 ### Changed
 - Changed the threshold value for [Playernames -> UUIDs](https://wiki.vg/Mojang_API#Playernames_-.3E_UUIDs) endpoint

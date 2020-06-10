@@ -13,8 +13,8 @@
         "php": ">=7.1.0",
         "ext-json": "*",
         "ext-mbstring": "*",
-        "guzzlehttp/guzzle": "^6.0.0",
-        "ramsey/uuid": "^3.0.0"
+        "guzzlehttp/guzzle": "^6|^7",
+        "ramsey/uuid": "^3|^4"
     },
     "require-dev": {
         "ely/php-code-style": "^0.3.0",
