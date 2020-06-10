@@ -6,6 +6,7 @@ namespace Ely\Mojang;
 use DateTime;
 use Ely\Mojang\Middleware\ResponseConverterMiddleware;
 use Ely\Mojang\Middleware\RetryMiddleware;
+use Ely\Mojang\Response\QuestionResponse;
 use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\GuzzleException;
@@ -150,8 +151,8 @@ class Api {
             }
         }
 
-        if (count($names) > 100) {
-            throw new InvalidArgumentException('You cannot request more than 100 names per request');
+        if (count($names) > 10) {
+            throw new InvalidArgumentException('You cannot request more than 10 names per request');
         }
 
         $response = $this->getClient()->request('POST', 'https://api.mojang.com/profiles/minecraft', [
@@ -450,6 +451,88 @@ class Api {
         $body = $this->decode($rawBody);
 
         return new Response\ProfileResponse($body['id'], $body['name'], $body['properties']);
+    }
+
+    /**
+     * @param string $accessToken
+     * @throws GuzzleException
+     *
+     * @url https://wiki.vg/Mojang_API#Check_if_security_questions_are_needed
+     */
+    public function isSecurityQuestionsNeeded(string $accessToken): void {
+        $request = new Request(
+            'GET',
+            'https://api.mojang.com/user/security/location',
+            ['Authorization' => 'Bearer ' . $accessToken]
+        );
+        $response = $this->getClient()->send($request);
+        $rawBody = $response->getBody()->getContents();
+        if (!empty($rawBody)) {
+            $body = $this->decode($rawBody);
+            throw new Exception\OperationException($body['errorMessage'], $request, $response);
+        }
+    }
+
+    /**
+     * @param string $accessToken
+     * @return array
+     * @throws GuzzleException
+     *
+     * @url https://wiki.vg/Mojang_API#Get_list_of_questions
+     */
+    public function questions(string $accessToken): array {
+        $request = new Request(
+            'GET',
+            'https://api.mojang.com/user/security/challenges',
+            ['Authorization' => 'Bearer ' . $accessToken]
+        );
+        $response = $this->getClient()->send($request);
+        $result = [];
+        $body = $this->decode($response->getBody()->getContents());
+        foreach ($body as $question) {
+            $result[] = new QuestionResponse($question['question']['id'], $question['question']['question'], $question['answer']['id']);
+        }
+
+        return $result;
+    }
+
+    /**
+     * @param string $accessToken
+     * @param array $answers
+     * @throws GuzzleException
+     * @return bool
+     *
+     * @url https://wiki.vg/Mojang_API#Send_back_the_answers
+     */
+    public function answer(string $accessToken, array $answers): bool {
+        $request = new Request(
+            'POST',
+            'https://api.mojang.com/user/security/location',
+            ['Authorization' => 'Bearer ' . $accessToken],
+            json_encode($answers)
+        );
+        $response = $this->getClient()->send($request);
+        $rawBody = $response->getBody()->getContents();
+
+        return empty($rawBody);
+    }
+
+    /**
+     * @param array $metricKeys
+     * @return Response\StatisticsResponse
+     * @throws GuzzleException
+     *
+     * @url https://wiki.vg/Mojang_API#Statistics
+     */
+    public function statistics(array $metricKeys) {
+        $response = $this->getClient()->request('POST', 'https://api.mojang.com/orders/statistics', [
+            'json' => [
+                'metricKeys' => $metricKeys,
+            ],
+        ]);
+        $body = $this->decode($response->getBody()->getContents());
+
+        return new Response\StatisticsResponse($body['total'], $body['last24h'], $body['saleVelocityPerSeconds']);
     }
 
     /**

@@ -5,6 +5,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- [Check if security questions are needed](https://wiki.vg/Mojang_API#Check_if_security_questions_are_needed) endpoint.
+- [Get list of questions](https://wiki.vg/Mojang_API#Get_list_of_questions) endpoint.
+- [Send back the answers](https://wiki.vg/Mojang_API#Send_back_the_answers) endpoint.
+- [Statistics](https://wiki.vg/Mojang_API#Statistics) endpoint.
+
+### Changed
+- Changed the threshold value for [Playernames -> UUIDs](https://wiki.vg/Mojang_API#Playernames_-.3E_UUIDs) endpoint
+  from `100` to `10`.
 
 ## [0.2.0] - 2019-05-07
 ### Added
