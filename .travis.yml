@@ -3,6 +3,7 @@ php:
   - 7.1
   - 7.2
   - 7.3
+  - 7.4
 
 cache:
   directories:
@@ -26,7 +27,7 @@ stages:
 jobs:
   include:
     - stage: Static Code Analysis
-      php: 7.3
+      php: 7.4
       script:
         - vendor/bin/php-cs-fixer fix -v --dry-run
 
