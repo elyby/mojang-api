@@ -13,6 +13,7 @@ use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Uri;
+use GuzzleHttp\RequestOptions;
 use InvalidArgumentException;
 use Ramsey\Uuid\Uuid;
 
@@ -524,7 +525,7 @@ class Api {
      *
      * @url https://wiki.vg/Mojang_API#Statistics
      */
-    public function statistics(array $metricKeys) {
+    public function statistics(array $metricKeys) { // TODO: missing return type annotation
         $response = $this->getClient()->request('POST', 'https://api.mojang.com/orders/statistics', [
             'json' => [
                 'metricKeys' => $metricKeys,
@@ -533,6 +534,43 @@ class Api {
         $body = $this->decode($response->getBody()->getContents());
 
         return new Response\StatisticsResponse($body['total'], $body['last24h'], $body['saleVelocityPerSeconds']);
+    }
+
+    /**
+     * @param string $accessToken
+     * @return \Ely\Mojang\Response\MinecraftServicesProfileResponse
+     * @throws GuzzleException
+     * @see https://wiki.vg/Mojang_API#Profile_Information
+     */
+    public function getProfile(string $accessToken): Response\MinecraftServicesProfileResponse {
+        $response = $this->getClient()->request('GET', 'https://api.minecraftservices.com/minecraft/profile', [
+            RequestOptions::HEADERS => [
+                'Authorization' => 'Bearer ' . $accessToken,
+            ],
+        ]);
+        $body = $this->decode($response->getBody()->getContents());
+
+        return new Response\MinecraftServicesProfileResponse(
+            $body['id'],
+            $body['name'],
+            array_map(function(array $item) {
+                return new Response\MinecraftServicesProfileSkin(
+                    $item['id'],
+                    $item['state'],
+                    $item['url'],
+                    $item['variant'],
+                    $item['alias'] ?? null
+                );
+            }, $body['skins']),
+            array_map(function(array $item) {
+                return new Response\MinecraftServicesProfileCape(
+                    $item['id'],
+                    $item['state'],
+                    $item['url'],
+                    $item['alias']
+                );
+            }, $body['capes'])
+        );
     }
 
     /**

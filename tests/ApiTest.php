@@ -735,6 +735,49 @@ class ApiTest extends TestCase {
         $this->assertSame(1.32, $result->getSaleVelocityPerSeconds());
     }
 
+    public function testGetProfile(): void {
+        $this->mockHandler->append($this->createResponse(200, [
+            'id' => '86f6e3695b764412a29820cac1d4d0d6',
+            'name' => 'MockUsername',
+            'skins' => [
+                [
+                    'id' => 'b647c354-16b0-47e3-8340-5d328b4215c1',
+                    'state' => 'ACTIVE',
+                    'url' => 'http://textures.minecraft.net/texture/3b60a1f6d562f52aaebbf1434f1de147933a3affe0e764fa49ea057536623cd3',
+                    'variant' => 'SLIM',
+                ],
+            ],
+            'capes' => [
+                [
+                    'id' => '402d2b1a-48a5-4177-8173-85b0d1d04889',
+                    'state' => 'ACTIVE',
+                    'url' => 'http://textures.minecraft.net/texture/153b1a0dfcbae953cdeb6f2c2bf6bf79943239b1372780da44bcbb29273131da',
+                    'alias' => 'Minecon2013',
+                ],
+            ],
+        ]));
+
+        $result = $this->api->getProfile('mock access token');
+
+        /** @var \Psr\Http\Message\RequestInterface $request */
+        $request = $this->history[0]['request'];
+        $this->assertSame('Bearer mock access token', $request->getHeaderLine('Authorization'));
+
+        $this->assertSame('86f6e3695b764412a29820cac1d4d0d6', $result->getId());
+        $this->assertSame('MockUsername', $result->getName());
+        $this->assertCount(1, $result->getSkins());
+        $this->assertSame('b647c354-16b0-47e3-8340-5d328b4215c1', $result->getSkins()[0]->getId());
+        $this->assertSame('ACTIVE', $result->getSkins()[0]->getState());
+        $this->assertSame('http://textures.minecraft.net/texture/3b60a1f6d562f52aaebbf1434f1de147933a3affe0e764fa49ea057536623cd3', $result->getSkins()[0]->getUrl());
+        $this->assertSame('SLIM', $result->getSkins()[0]->getVariant());
+        $this->assertNull($result->getSkins()[0]->getAlias());
+        $this->assertCount(1, $result->getCapes());
+        $this->assertSame('402d2b1a-48a5-4177-8173-85b0d1d04889', $result->getCapes()[0]->getId());
+        $this->assertSame('ACTIVE', $result->getCapes()[0]->getState());
+        $this->assertSame('http://textures.minecraft.net/texture/153b1a0dfcbae953cdeb6f2c2bf6bf79943239b1372780da44bcbb29273131da', $result->getCapes()[0]->getUrl());
+        $this->assertSame('Minecon2013', $result->getCapes()[0]->getAlias());
+    }
+
     private function createResponse(int $statusCode, array $response): ResponseInterface {
         return new Response($statusCode, ['content-type' => 'json'], json_encode($response));
     }
