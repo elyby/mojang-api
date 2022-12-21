@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - [Profile Information](https://wiki.vg/Mojang_API#Profile_Information) endpoint.
+- [Change skin](https://wiki.vg/Mojang_API#Change_Skin) endpoint.
+- [Upload skin](https://wiki.vg/Mojang_API#Upload_Skin) endpoint.
 
 ## [0.2.1] - 2020-06-10
 ### Added

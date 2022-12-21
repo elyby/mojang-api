@@ -778,6 +778,28 @@ class ApiTest extends TestCase {
         $this->assertSame('Minecon2013', $result->getCapes()[0]->getAlias());
     }
 
+    public function testUploadSkinByFile(): void {
+        $this->mockHandler->append(new Response(200));
+        $this->api->uploadSkinByFile('mock access token', 'skin contents', false);
+
+        /** @var \Psr\Http\Message\RequestInterface $request */
+        $request = $this->history[0]['request'];
+        $this->assertSame('Bearer mock access token', $request->getHeaderLine('Authorization'));
+        $this->assertStringContainsString('skin contents', (string)$request->getBody());
+        $this->assertStringContainsString('classic', (string)$request->getBody());
+    }
+
+    public function testUploadSkinByUrl(): void {
+        $this->mockHandler->append(new Response(200));
+        $this->api->uploadSkinByUrl('mock access token', 'https://example.com/skin.png', false);
+
+        /** @var \Psr\Http\Message\RequestInterface $request */
+        $request = $this->history[0]['request'];
+        $this->assertSame('Bearer mock access token', $request->getHeaderLine('Authorization'));
+        $this->assertSame('application/json', $request->getHeaderLine('Content-Type'));
+        $this->assertSame('{"variant":"classic","url":"https:\/\/example.com\/skin.png"}', (string)$request->getBody());
+    }
+
     private function createResponse(int $statusCode, array $response): ResponseInterface {
         return new Response($statusCode, ['content-type' => 'json'], json_encode($response));
     }

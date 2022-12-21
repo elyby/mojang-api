@@ -210,6 +210,7 @@ class Api {
      *
      * @throws GuzzleException
      *
+     * @deprecated
      * @url https://wiki.vg/Mojang_API#Upload_Skin
      */
     public function uploadSkin(string $accessToken, string $accountUuid, $skinContents, bool $isSlim): void {
@@ -571,6 +572,55 @@ class Api {
                 );
             }, $body['capes'])
         );
+    }
+
+    /**
+     * @param string $accessToken
+     * @param \Psr\Http\Message\StreamInterface|resource|string $skinContents
+     * @param bool $isSlim
+     *
+     * @throws GuzzleException
+     *
+     * @url https://wiki.vg/Mojang_API#Upload_Skin
+     */
+    public function uploadSkinByFile(string $accessToken, $skinContents, bool $isSlim): void {
+        $this->getClient()->request('POST', 'https://api.minecraftservices.com/minecraft/profile/skins', [
+            RequestOptions::MULTIPART => [
+                [
+                    'name' => 'file',
+                    'contents' => $skinContents,
+                    'filename' => 'char.png',
+                ],
+                [
+                    'name' => 'variant',
+                    'contents' => $isSlim ? 'slim' : 'classic',
+                ],
+            ],
+            RequestOptions::HEADERS => [
+                'Authorization' => 'Bearer ' . $accessToken,
+            ],
+        ]);
+    }
+
+    /**
+     * @param string $accessToken
+     * @param string $skinUrl
+     * @param bool $isSlim
+     *
+     * @throws GuzzleException
+     *
+     * @url https://wiki.vg/Mojang_API#Change_Skin
+     */
+    public function uploadSkinByUrl(string $accessToken, string $skinUrl, bool $isSlim): void {
+        $this->getClient()->request('POST', 'https://api.minecraftservices.com/minecraft/profile/skins', [
+            RequestOptions::JSON => [
+                'variant' => $isSlim ? 'slim' : 'classic',
+                'url' => $skinUrl,
+            ],
+            RequestOptions::HEADERS => [
+                'Authorization' => 'Bearer ' . $accessToken,
+            ],
+        ]);
     }
 
     /**
